@@ -7,6 +7,7 @@ data class MovieListState(
     val movies: List<MovieUiModel> = emptyList(),
     val error: String? = null,
     val isOfflineMode: Boolean = false,
+    val selectedMovie: MovieUiModel? = null,
 )
 
 sealed class MovieListAction {
@@ -18,4 +19,10 @@ sealed class MovieListAction {
     data object OnRefresh : MovieListAction()
 
     data object OnOfflineMessageShown : MovieListAction()
+
+    data class OnMovieClicked(
+        val movie: MovieUiModel,
+    ) : MovieListAction()
+
+    data object OnDismissMovieDetails : MovieListAction()
 }

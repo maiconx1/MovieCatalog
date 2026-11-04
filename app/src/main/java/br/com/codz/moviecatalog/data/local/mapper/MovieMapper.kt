@@ -9,6 +9,8 @@ fun MovieEntity.toDomain(): Movie =
         title = this.title,
         overview = this.overview,
         posterUrl = this.posterUrl,
+        releaseDate = this.releaseDate,
+        voteAverage = this.voteAverage,
         isFavorite = this.isFavorite,
     )
 

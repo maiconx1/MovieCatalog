@@ -6,6 +6,7 @@ import br.com.codz.moviecatalog.domain.usecase.GetMoviesUseCase
 import br.com.codz.moviecatalog.domain.usecase.RefreshMoviesUseCase
 import br.com.codz.moviecatalog.domain.usecase.ToggleFavoriteUseCase
 import br.com.codz.moviecatalog.ui.mapper.toUiModelList
+import br.com.codz.moviecatalog.ui.model.MovieUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,9 @@ class MovieListViewModel
                         action.movieId,
                         action.currentStatus,
                     )
+
+                MovieListAction.OnDismissMovieDetails -> dismissMovieDetails()
+                is MovieListAction.OnMovieClicked -> selectMovie(action.movie)
             }
         }
 
@@ -86,5 +90,17 @@ class MovieListViewModel
 
         private fun clearOfflineMessage() {
             _state.update { it.copy(isOfflineMode = false) }
+        }
+
+        private fun dismissMovieDetails() {
+            _state.update {
+                it.copy(selectedMovie = null)
+            }
+        }
+
+        private fun selectMovie(movie: MovieUiModel) {
+            _state.update {
+                it.copy(selectedMovie = movie)
+            }
         }
     }

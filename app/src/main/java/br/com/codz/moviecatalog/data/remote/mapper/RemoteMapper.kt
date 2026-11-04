@@ -11,6 +11,8 @@ fun MovieDto.toEntity(): MovieEntity =
         title = this.title,
         overview = this.overview,
         posterUrl = this.posterPath?.let { "$IMAGE_BASE_URL$it" } ?: "",
+        releaseDate = this.releaseDate ?: "",
+        voteAverage = this.voteAverage ?: 0.0,
         isFavorite = false,
         lastUpdated = System.currentTimeMillis(),
     )

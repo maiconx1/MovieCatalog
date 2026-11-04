@@ -6,4 +6,6 @@ data class MovieUiModel(
     val overview: String,
     val posterUrl: String,
     val isFavorite: Boolean,
+    val releaseYear: String,
+    val formattedRating: String,
 )

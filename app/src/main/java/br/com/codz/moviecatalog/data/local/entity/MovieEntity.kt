@@ -16,6 +16,10 @@ data class MovieEntity(
     val overview: String,
     @ColumnInfo(name = COLUMN_POSTER_URL)
     val posterUrl: String,
+    @ColumnInfo(name = COLUMN_RELEASE_DATE)
+    val releaseDate: String,
+    @ColumnInfo(name = COLUMN_VOTE_AVERAGE)
+    val voteAverage: Double,
     @ColumnInfo(name = COLUMN_IS_FAVORITE)
     val isFavorite: Boolean = false,
     @ColumnInfo(name = COLUMN_LAST_UPDATED)
@@ -29,5 +33,7 @@ data class MovieEntity(
         const val COLUMN_POSTER_URL = "posterUrl"
         const val COLUMN_IS_FAVORITE = "isFavorite"
         const val COLUMN_LAST_UPDATED = "lastUpdated"
+        const val COLUMN_RELEASE_DATE = "releaseDate"
+        const val COLUMN_VOTE_AVERAGE = "voteAverage"
     }
 }
