@@ -1,8 +1,9 @@
 package br.com.codz.moviecatalog.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy.Companion.IGNORE
 import androidx.room.Query
-import androidx.room.Upsert
 import br.com.codz.moviecatalog.data.local.entity.MovieEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -16,7 +17,7 @@ interface MovieDao {
     )
     fun getFavoriteMovies(): Flow<List<MovieEntity>>
 
-    @Upsert
+    @Insert(onConflict = IGNORE)
     suspend fun insertMovies(movies: List<MovieEntity>)
 
     @Query("UPDATE ${MovieEntity.TABLE_NAME} SET ${MovieEntity.COLUMN_IS_FAVORITE} = :isFavorite WHERE ${MovieEntity.COLUMN_ID} = :movieId")
