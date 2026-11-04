@@ -21,7 +21,7 @@ interface MovieDao {
 
     @Query("UPDATE ${MovieEntity.TABLE_NAME} SET ${MovieEntity.COLUMN_IS_FAVORITE} = :isFavorite WHERE ${MovieEntity.COLUMN_ID} = :movieId")
     suspend fun updateFavoriteStatus(
-        movieId: Long,
+        movieId: Int,
         isFavorite: Boolean,
     )
 }

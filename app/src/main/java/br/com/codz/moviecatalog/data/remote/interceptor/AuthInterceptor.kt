@@ -1,4 +1,4 @@
-package br.com.codz.moviecatalog.data.remote.intercaptor
+package br.com.codz.moviecatalog.data.remote.interceptor
 
 import okhttp3.Interceptor
 import okhttp3.Response
