@@ -1,11 +1,14 @@
 package br.com.codz.moviecatalog.di
 
+import android.content.Context
+import android.net.ConnectivityManager
 import br.com.codz.moviecatalog.BuildConfig
 import br.com.codz.moviecatalog.data.remote.api.TmdbApi
 import br.com.codz.moviecatalog.data.remote.interceptor.AuthInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -39,4 +42,10 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(TmdbApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideConnectivityManager(
+        @ApplicationContext context: Context,
+    ): ConnectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 }
