@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -15,6 +18,13 @@ android {
             }
     }
 
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    }
+    val tmdbToken: String = localProperties.getProperty("TMDB_BEARER_TOKEN") ?: ""
+
     defaultConfig {
         applicationId = "br.com.codz.moviecatalog"
         minSdk = 24
@@ -23,6 +33,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "TMDB_BEARER_TOKEN", "\"$tmdbToken\"")
     }
 
     buildTypes {
@@ -37,6 +48,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
@@ -80,6 +92,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    testImplementation(libs.mockk.jvm)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 ktlint {

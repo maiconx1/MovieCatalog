@@ -10,8 +10,8 @@ class ToggleFavoriteUseCase
     ) {
         suspend operator fun invoke(
             movieId: Int,
-            isFavorite: Boolean,
+            currentStatus: Boolean,
         ) {
-            repository.toggleFavorite(movieId, isFavorite)
+            repository.toggleFavorite(movieId, !currentStatus)
         }
     }
