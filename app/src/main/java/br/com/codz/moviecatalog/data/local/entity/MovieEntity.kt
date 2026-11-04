@@ -19,7 +19,7 @@ data class MovieEntity(
     @ColumnInfo(name = COLUMN_IS_FAVORITE)
     val isFavorite: Boolean = false,
     @ColumnInfo(name = COLUMN_LAST_UPDATED)
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 ) {
     companion object {
         const val TABLE_NAME = "movies"

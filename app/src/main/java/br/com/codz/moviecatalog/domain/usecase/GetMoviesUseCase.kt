@@ -5,8 +5,10 @@ import br.com.codz.moviecatalog.domain.repository.MovieRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetMoviesUseCase @Inject constructor(private val repository: MovieRepository) {
-    operator fun invoke(): Flow<List<Movie>> {
-        return repository.getMovies()
+class GetMoviesUseCase
+    @Inject
+    constructor(
+        private val repository: MovieRepository,
+    ) {
+        operator fun invoke(): Flow<List<Movie>> = repository.getMovies()
     }
-}
