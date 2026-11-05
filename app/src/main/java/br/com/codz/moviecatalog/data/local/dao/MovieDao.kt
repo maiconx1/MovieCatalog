@@ -1,5 +1,6 @@
 package br.com.codz.moviecatalog.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.Companion.IGNORE
@@ -9,11 +10,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MovieDao {
-    @Query("SELECT * FROM ${MovieEntity.TABLE_NAME} ORDER BY ${MovieEntity.COLUMN_LAST_UPDATED} DESC")
-    fun getAllMovies(): Flow<List<MovieEntity>>
+    @Query("SELECT * FROM ${MovieEntity.TABLE_NAME} ORDER BY ${MovieEntity.COLUMN_LAST_UPDATED} ASC, ${MovieEntity.COLUMN_ID} ASC")
+    fun getPagedMovies(): PagingSource<Int, MovieEntity>
 
     @Query(
-        "SELECT * FROM ${MovieEntity.TABLE_NAME} WHERE ${MovieEntity.COLUMN_IS_FAVORITE} = 1 ORDER BY ${MovieEntity.COLUMN_LAST_UPDATED} DESC",
+        "SELECT * FROM ${MovieEntity.TABLE_NAME} WHERE ${MovieEntity.COLUMN_IS_FAVORITE} = 1 ORDER BY ${MovieEntity.COLUMN_LAST_UPDATED} ASC, ${MovieEntity.COLUMN_ID} ASC",
     )
     fun getFavoriteMovies(): Flow<List<MovieEntity>>
 
@@ -25,4 +26,7 @@ interface MovieDao {
         movieId: Int,
         isFavorite: Boolean,
     )
+
+    @Query("DELETE FROM movies WHERE isFavorite = 0")
+    suspend fun clearNonFavoriteMovies()
 }

@@ -20,9 +20,9 @@ class GetMoviesUseCaseTest {
     }
 
     @Test
-    fun `invoke should call getMovies on repository`() =
+    fun `invoke should call getPagedMovies on repository`() =
         runTest {
             useCase()
-            coVerify(exactly = 1) { repository.getMovies() }
+            coVerify(exactly = 1) { repository.getPagedMovies() }
         }
 }

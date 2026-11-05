@@ -1,42 +1,45 @@
 package br.com.codz.moviecatalog.data.repository
 
-import br.com.codz.moviecatalog.data.local.dao.MovieDao
-import br.com.codz.moviecatalog.data.local.mapper.toDomainList
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
+import br.com.codz.moviecatalog.data.local.MovieDatabase
+import br.com.codz.moviecatalog.data.local.mapper.toDomain
 import br.com.codz.moviecatalog.data.remote.api.TmdbApi
-import br.com.codz.moviecatalog.data.remote.mapper.toEntityList
 import br.com.codz.moviecatalog.domain.model.Movie
 import br.com.codz.moviecatalog.domain.repository.MovieRepository
-import coil3.network.HttpException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import okio.IOException
 import javax.inject.Inject
 
+@OptIn(ExperimentalPagingApi::class)
 class MovieRepositoryImpl
     @Inject
     constructor(
         private val api: TmdbApi,
-        private val dao: MovieDao,
+        private val database: MovieDatabase,
     ) : MovieRepository {
-        override fun getMovies(): Flow<List<Movie>> = dao.getAllMovies().map { it.toDomainList() }
-
-        override suspend fun refreshMovies() {
-            try {
-                val response = api.getPopularMovies()
-                val entities = response.results.toEntityList()
-
-                dao.insertMovies(entities)
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } catch (e: HttpException) {
-                e.printStackTrace()
+        override fun getPagedMovies(): Flow<PagingData<Movie>> =
+            Pager(
+                config =
+                    PagingConfig(
+                        pageSize = 20,
+                        initialLoadSize = 20,
+                        prefetchDistance = 5,
+                        enablePlaceholders = true,
+                    ),
+                remoteMediator = MovieRemoteMediator(api, database),
+                pagingSourceFactory = { database.movieDao().getPagedMovies() },
+            ).flow.map { pagingData ->
+                pagingData.map { it.toDomain() }
             }
-        }
 
         override suspend fun toggleFavorite(
             movieId: Int,
             isFavorite: Boolean,
         ) {
-            dao.updateFavoriteStatus(movieId, isFavorite)
+            database.movieDao().updateFavoriteStatus(movieId, isFavorite)
         }
     }

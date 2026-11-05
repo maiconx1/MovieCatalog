@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +37,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import br.com.codz.moviecatalog.R
 import br.com.codz.moviecatalog.ui.components.MovieCard
 import br.com.codz.moviecatalog.ui.model.MovieUiModel
@@ -45,15 +50,19 @@ import br.com.codz.moviecatalog.ui.screens.movielist.viewmodel.MovieListAction
 import br.com.codz.moviecatalog.ui.screens.movielist.viewmodel.MovieListState
 import br.com.codz.moviecatalog.ui.screens.movielist.viewmodel.MovieListViewModel
 import br.com.codz.moviecatalog.ui.theme.LocalSpacing
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun MovieListScreenRoute(viewModel: MovieListViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isOnline by viewModel.isConnected.collectAsStateWithLifecycle()
 
+    val pagedMovies = viewModel.pagedMovies.collectAsLazyPagingItems()
+
     MovieListScreen(
         state = state,
         isOnline = isOnline,
+        pagedMovies = pagedMovies,
         onAction = viewModel::onAction,
     )
 }
@@ -62,6 +71,7 @@ fun MovieListScreenRoute(viewModel: MovieListViewModel = viewModel()) {
 fun MovieListScreen(
     state: MovieListState,
     isOnline: Boolean,
+    pagedMovies: LazyPagingItems<MovieUiModel>,
     onAction: (MovieListAction) -> Unit,
 ) {
     val spacing = LocalSpacing.current
@@ -69,12 +79,18 @@ fun MovieListScreen(
 
     val offlineErrorMessage = stringResource(R.string.error_offline)
 
-    LaunchedEffect(state.isOfflineMode) {
-        if (state.isOfflineMode) {
+    val loadState = pagedMovies.loadState.mediator
+    LaunchedEffect(loadState) {
+        if (loadState?.refresh is LoadState.Error || loadState?.append is LoadState.Error) {
             snackBarHostState.showSnackbar(
                 message = offlineErrorMessage,
             )
-            onAction(MovieListAction.OnOfflineMessageShown)
+        }
+    }
+
+    LaunchedEffect(isOnline) {
+        if (isOnline) {
+            pagedMovies.retry()
         }
     }
 
@@ -87,10 +103,11 @@ fun MovieListScreen(
                     .fillMaxSize()
                     .padding(paddingValues),
         ) {
-            if (state.isLoading && state.movies.isEmpty()) {
+            if (pagedMovies.loadState.refresh is LoadState.Loading && pagedMovies.itemCount == 0) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
-                PullToRefreshBox(state.isLoading, { onAction(MovieListAction.OnRefresh) }) {
+                val isRefreshing = pagedMovies.loadState.refresh is LoadState.Loading
+                PullToRefreshBox(isRefreshing, { pagedMovies.refresh() }) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         contentPadding = PaddingValues(spacing.medium),
@@ -99,7 +116,7 @@ fun MovieListScreen(
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         if (!isOnline) {
-                            item(span = { GridItemSpan(maxLineSpan) }) {
+                            stickyHeader {
                                 Text(
                                     text = stringResource(R.string.you_are_offline),
                                     modifier =
@@ -110,7 +127,7 @@ fun MovieListScreen(
                                     color = MaterialTheme.colorScheme.onError,
                                 )
                             }
-                            if (state.movies.isEmpty()) {
+                            if (pagedMovies.itemCount == 0) {
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Text(
                                         text = stringResource(R.string.no_movies_saved),
@@ -122,16 +139,38 @@ fun MovieListScreen(
                             }
                         }
                         items(
-                            items = state.movies,
-                            key = { movie -> movie.id },
-                        ) { movie ->
-                            MovieCard(
-                                movie = movie,
-                                onClick = { onAction(MovieListAction.OnMovieClicked(movie)) },
-                                onToggleFavorite = { id, currentStatus ->
-                                    onAction(MovieListAction.OnToggleFavorite(id, currentStatus))
-                                },
-                            )
+                            count = pagedMovies.itemCount,
+                            key = pagedMovies.itemKey { it.id },
+                            contentType = pagedMovies.itemContentType { "MovieCard" },
+                        ) { index ->
+                            pagedMovies[index]?.let { movie ->
+                                MovieCard(
+                                    movie = movie,
+                                    onClick = { onAction(MovieListAction.OnMovieClicked(movie)) },
+                                    onToggleFavorite = { id, currentStatus ->
+                                        onAction(
+                                            MovieListAction.OnToggleFavorite(
+                                                id,
+                                                currentStatus,
+                                            ),
+                                        )
+                                    },
+                                )
+                            }
+                        }
+
+                        if (pagedMovies.loadState.append is LoadState.Loading) {
+                            item(span = { GridItemSpan(2) }) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(spacing.medium),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
                         }
                     }
                 }
@@ -180,37 +219,19 @@ fun MovieListScreen(
 @Preview
 @Composable
 fun MovieListScreenLoadingPreview() {
-    MovieListScreen(MovieListState(), false) { }
+    MovieListScreen(
+        MovieListState(),
+        false,
+        flowOf(PagingData.empty<MovieUiModel>()).collectAsLazyPagingItems(),
+    ) { }
 }
 
 @Preview
 @Composable
 fun MovieListScreenListPreview() {
     MovieListScreen(
-        MovieListState(
-            isLoading = false,
-            movies =
-                listOf(
-                    MovieUiModel(
-                        id = 1,
-                        title = "Movie Title",
-                        overview = "Movie Overview",
-                        posterUrl = "https://example.com/poster.jpg",
-                        isFavorite = false,
-                        releaseYear = "1999",
-                        formattedRating = "4.9",
-                    ),
-                    MovieUiModel(
-                        id = 2,
-                        title = "Movie Title 2",
-                        overview = "Movie Overview 2",
-                        posterUrl = "https://example.com/poster.jpg",
-                        isFavorite = true,
-                        releaseYear = "1998",
-                        formattedRating = "3.8",
-                    ),
-                ),
-        ),
+        state = MovieListState(),
+        pagedMovies = flowOf(PagingData.empty<MovieUiModel>()).collectAsLazyPagingItems(),
         isOnline = true,
     ) { }
 }
