@@ -31,18 +31,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import br.com.codz.moviecatalog.R
 import br.com.codz.moviecatalog.ui.components.MovieCard
 import br.com.codz.moviecatalog.ui.model.MovieUiModel
 import br.com.codz.moviecatalog.ui.screens.movielist.viewmodel.MovieListAction
 import br.com.codz.moviecatalog.ui.screens.movielist.viewmodel.MovieListState
 import br.com.codz.moviecatalog.ui.screens.movielist.viewmodel.MovieListViewModel
+import br.com.codz.moviecatalog.ui.theme.LocalSpacing
 
 @Composable
 fun MovieListScreenRoute(viewModel: MovieListViewModel = viewModel()) {
@@ -62,12 +64,15 @@ fun MovieListScreen(
     isOnline: Boolean,
     onAction: (MovieListAction) -> Unit,
 ) {
+    val spacing = LocalSpacing.current
     val snackBarHostState = remember { SnackbarHostState() }
+
+    val offlineErrorMessage = stringResource(R.string.error_offline)
 
     LaunchedEffect(state.isOfflineMode) {
         if (state.isOfflineMode) {
             snackBarHostState.showSnackbar(
-                message = "No internet connection. Showing local data.",
+                message = offlineErrorMessage,
             )
             onAction(MovieListAction.OnOfflineMessageShown)
         }
@@ -88,15 +93,15 @@ fun MovieListScreen(
                 PullToRefreshBox(state.isLoading, { onAction(MovieListAction.OnRefresh) }) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(spacing.medium),
+                        horizontalArrangement = Arrangement.spacedBy(spacing.medium),
+                        verticalArrangement = Arrangement.spacedBy(spacing.medium),
                         modifier = Modifier.fillMaxSize(),
                     ) {
                         if (!isOnline) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 Text(
-                                    text = "You are offline",
+                                    text = stringResource(R.string.you_are_offline),
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
@@ -108,7 +113,7 @@ fun MovieListScreen(
                             if (state.movies.isEmpty()) {
                                 item(span = { GridItemSpan(maxLineSpan) }) {
                                     Text(
-                                        text = "No movies saved locally",
+                                        text = stringResource(R.string.no_movies_saved),
                                         modifier = Modifier.fillMaxWidth(),
                                         textAlign = TextAlign.Center,
                                         style = MaterialTheme.typography.headlineMedium,
@@ -144,24 +149,29 @@ fun MovieListScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                        .padding(horizontal = spacing.large, vertical = spacing.medium),
             ) {
                 Text(
                     text = movie.title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(spacing.small))
                 Text(
-                    text = "${movie.releaseYear} • ⭐ ${movie.formattedRating}",
+                    text =
+                        stringResource(
+                            R.string.format_rating_year,
+                            movie.releaseYear,
+                            movie.formattedRating,
+                        ),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(spacing.medium))
                 Text(
                     text = movie.overview,
                     style = MaterialTheme.typography.bodyLarge,
                     lineHeight = 24.sp,
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(spacing.extraLarge))
             }
         }
     }

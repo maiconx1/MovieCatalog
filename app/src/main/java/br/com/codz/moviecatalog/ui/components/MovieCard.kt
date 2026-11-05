@@ -31,11 +31,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.codz.moviecatalog.R
 import br.com.codz.moviecatalog.ui.model.MovieUiModel
+import br.com.codz.moviecatalog.ui.theme.LocalSpacing
 import coil3.compose.SubcomposeAsyncImage
 
 @Composable
@@ -45,6 +47,8 @@ fun MovieCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val spacing = LocalSpacing.current
+
     Card(
         modifier =
             modifier
@@ -52,17 +56,17 @@ fun MovieCard(
                 .aspectRatio(0.66f)
                 .clickable { onClick() },
         // 2:3 aspect ratio
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(spacing.small),
+        elevation = CardDefaults.cardElevation(defaultElevation = spacing.extraSmall),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             SubcomposeAsyncImage(
                 model = movie.posterUrl,
-                contentDescription = "Poster for ${movie.title}",
+                contentDescription = stringResource(R.string.content_desc_poster, movie.title),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
                 loading = {
-                    CircularProgressIndicator(modifier = Modifier.requiredSize(40.dp))
+                    CircularProgressIndicator(modifier = Modifier.requiredSize(spacing.extraLarge))
                 },
             )
 
@@ -71,11 +75,18 @@ fun MovieCard(
                 modifier =
                     Modifier
                         .align(Alignment.TopEnd)
-                        .padding(4.dp),
+                        .padding(spacing.extraSmall),
             ) {
                 Icon(
                     imageVector = if (movie.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = "Favorite",
+                    contentDescription =
+                        if (movie.isFavorite) {
+                            stringResource(R.string.content_desc_favorite_true)
+                        } else {
+                            stringResource(
+                                R.string.content_desc_favorite_false,
+                            )
+                        },
                     tint = if (movie.isFavorite) Color.Red else Color.White,
                 )
             }
@@ -83,20 +94,25 @@ fun MovieCard(
                 modifier =
                     Modifier
                         .align(Alignment.BottomStart)
-                        .padding(8.dp)
-                        .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                        .padding(spacing.small)
+                        .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(spacing.extraSmall))
+                        .padding(horizontal = spacing.small, vertical = spacing.extraSmall),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Star,
-                        contentDescription = "Nota",
+                        contentDescription = stringResource(R.string.content_desc_movie_rating),
                         tint = Color.Yellow,
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(spacing.medium),
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(spacing.extraSmall))
                     Text(
-                        text = "${movie.formattedRating} • ${movie.releaseYear}",
+                        text =
+                            stringResource(
+                                R.string.format_rating_year,
+                                movie.releaseYear,
+                                movie.formattedRating,
+                            ),
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -124,6 +140,5 @@ fun MovieCardPreview() {
             ),
         onToggleFavorite = { _, _ -> isFavorite = !isFavorite },
         onClick = {},
-        modifier = Modifier.padding(8.dp),
     )
 }

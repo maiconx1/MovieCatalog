@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">MovieCatalog</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="error_offline">No internet connection. Showing local data.</string>
+    <string name="you_are_offline">You are offline</string>
+    <string name="no_movies_saved">No movies saved locally</string>
+    <string name="format_rating_year">%1$s • ⭐ %2$s</string>
+    <string name="content_desc_poster">Poster for %1$s</string>
+    <string name="content_desc_favorite_false">Add to favorite</string>
+    <string name="content_desc_favorite_true">Remove from favorite</string>
+    <string name="content_desc_movie_rating">Rating</string>
 </resources>
